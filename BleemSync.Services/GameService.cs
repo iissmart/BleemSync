@@ -2,6 +2,7 @@
 using System;
 using SharpConfig;
 using System.Linq;
+using System.IO;
 
 namespace BleemSync.Services
 {
@@ -11,7 +12,25 @@ namespace BleemSync.Services
         {
             var gamesDirectory = Utilities.Filesystem.GetGamesDirectory();
 
-            var config = Configuration.LoadFromFile($"{gamesDirectory}\\{gameId}\\Game.ini");
+            Configuration config = null;
+
+            try
+            {
+                var path = Path.Join(gamesDirectory, gameId.ToString(), "Game.ini");
+                config = Configuration.LoadFromFile(path);
+            } catch { }
+
+            try
+            {
+                var path = Path.Combine(new [] { gamesDirectory, gameId.ToString(), "GameData", "Game.ini"});
+                config = Configuration.LoadFromFile(path);
+            }
+            catch { }
+
+            if (config == null) {
+                throw new Exception($"Game.ini not found for game with id {gameId}");
+            }
+
             var section = config["Game"];
 
             var game = new GameInfo()
